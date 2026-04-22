@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台北旅行 2025 旅程管理</title>
+    <title>台北旅行 2025</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -94,7 +94,7 @@
     <div id="lang-modal" class="modal-overlay fixed inset-0 z-[100] items-center justify-center p-4" onclick="if(event.target===this)toggleModal('lang-modal')">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[80vh]">
             <div class="p-4 bg-blue-600 text-white flex justify-between items-center shrink-0">
-                <h2 class="font-bold flex items-center gap-2"><i data-lucide="languages"></i> 台湾語ガイド (ピンイン)</h2>
+                <h2 class="font-bold flex items-center gap-2"><i data-lucide="languages"></i> 台湾語ガイド </h2>
                 <button onclick="toggleModal('lang-modal')"><i data-lucide="x"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
@@ -188,42 +188,42 @@
             itinerary: {
                 1: {
                     date: "4/25(土)",
-                    title: "定番グルメと雑貨巡り",
+                    title: "雑貨巡り",
                     spots: [
-                        { name: "桃園国際空港", desc: "空港鉄道で台北駅へ移動", lat: 25.0797, lng: 121.2342, type: "transport", gmaps: "https://maps.app.goo.gl/uPtoLpA7W7u56p6p6" },
+                        { name: "桃園国際空港", desc: "空港鉄道で台北駅に向かう", lat: 25.0797, lng: 121.2342, type: "transport", gmaps: "https://maps.app.goo.gl/uPtoLpA7W7u56p6p6" },
                         { name: "Meworld Hotel", desc: "荷物を預けて西門探索", lat: 25.0440, lng: 121.5085, type: "hotel", gmaps: "https://maps.app.goo.gl/3HhZ2D1XfU1P8Z1S8" },
-                        { name: "阿宗麺線", desc: "とろとろ鰹出汁麺線", lat: 25.0433, lng: 121.5077, type: "food", category: "lunch", gmaps: "https://maps.app.goo.gl/6WdK7G9L7J7J7J7J8" },
-                        { name: "迪化街 (梁山泊一零捌)", desc: "センス抜群の雑貨探し", lat: 25.0560, lng: 121.5100, type: "shop", gmaps: "https://maps.app.goo.gl/Fk9S7D6A5S4D3F2G1" },
-                        { name: "SWEEDOM", desc: "ヌガーのティータイム", lat: 25.0550, lng: 121.5110, type: "food", gmaps: "https://maps.app.goo.gl/T4R3E2W1Q" },
-                        { name: "一甲子餐飲", desc: "絶品角煮刈包", lat: 25.0400, lng: 121.5030, type: "food", category: "dinner", gmaps: "https://maps.app.goo.gl/K9L8M7N6P5" }
+                        { name: "阿宗麺線", desc: "うまい麺", lat: 25.0433, lng: 121.5077, type: "food", category: "lunch", gmaps: "https://maps.app.goo.gl/wY2wsCYnpNnBR3tS6" },
+                        { name: "迪化街 (梁山泊一零捌)", desc: "雑貨屋さん巡り", lat: 25.0560, lng: 121.5100, type: "shop", gmaps: "https://maps.app.goo.gl/KUd1g19aQBwtCUtKA" },
+                        { name: "SWEEDOM", desc: "お土産: ヌガークラッカー", lat: 25.0550, lng: 121.5110, type: "food", gmaps: "https://maps.app.goo.gl/WRQiJ1eiS5QHk5wg6" },
+                        { name: "一甲子餐飲", desc: "角煮バーガー食べる🍔", lat: 25.0400, lng: 121.5030, type: "food", category: "dinner", gmaps: "https://maps.app.goo.gl/wFxg2bXfBj7zAEb58" }
                     ]
                 },
                 2: {
                     date: "4/26(日)",
-                    title: "ゆったり九份ツアー",
+                    title: "九份",
                     spots: [
-                        { name: "金峰魯肉飯", desc: "台北No.1魯肉飯ランチ", lat: 25.0325, lng: 121.5183, type: "food", category: "lunch", gmaps: "https://maps.app.goo.gl/H8G7F6D5S4" },
-                        { name: "九份ツアー出発", desc: "KKday集合場所へ", lat: 25.0478, lng: 121.5170, type: "transport", gmaps: "https://maps.app.goo.gl/TaipeiMainStation" },
-                        { name: "九份老街", desc: "幻想的な夜の街並み", lat: 25.1099, lng: 121.8450, type: "spot", gmaps: "https://maps.app.goo.gl/JiufenOldStreet" },
-                        { name: "饒河街観光夜市", desc: "ツアー後の夜市散策", lat: 25.0501, lng: 121.5775, type: "food", category: "dinner", gmaps: "https://maps.app.goo.gl/RaoheNightMarket" }
+                        { name: "金峰魯肉飯", desc: "魯肉飯ランチ!", lat: 25.0325, lng: 121.5183, type: "food", category: "lunch", gmaps: "https://maps.app.goo.gl/JY3reDJs7vRhp3EK7" },
+                        { name: "九份ツアー出発", desc: "台北駅東1門", lat: 25.0478, lng: 121.5170, type: "transport", gmaps: "https://maps.app.goo.gl/TaipeiMainStation" },
+                        { name: "九份老街", desc: "千と千尋のとこ", lat: 25.1099, lng: 121.8450, type: "spot", gmaps: "https://maps.app.goo.gl/YNDAs4xC8uSH3pPQ8" },
+                        { name: "饒河街観光夜市", desc: "胡椒餅とか白玉とかたべる", lat: 25.0501, lng: 121.5775, type: "food", category: "dinner", gmaps: "https://maps.app.goo.gl/dMrYye9Mi8hcPGQRA" }
                     ]
                 },
                 3: {
                     date: "4/27(月)",
-                    title: "故宮博物館と中山ディナー",
+                    title: "故宮博物館+お買い物",
                     spots: [
-                        { name: "阜杭豆漿", desc: "行列必須の豆乳スープ", lat: 25.0441, lng: 121.5248, type: "food", category: "breakfast", gmaps: "https://maps.app.goo.gl/FuhangDoujiang" },
-                        { name: "国立故宮博物院", desc: "世界の至宝をじっくり鑑賞", lat: 25.1023, lng: 121.5485, type: "spot", gmaps: "https://maps.app.goo.gl/GugongMuseum" },
-                        { name: "中山エリア (赤峰街)", desc: "お洒落な路地裏と古着屋", lat: 25.0538, lng: 121.5205, type: "shop", gmaps: "https://maps.app.goo.gl/ZhongshanArea" },
-                        { name: "Goodbeitao", desc: "お洒落な台湾料理ディナー", lat: 25.0520, lng: 121.5220, type: "food", category: "dinner", gmaps: "https://maps.app.goo.gl/GoodbeitaoShop" }
+                        { name: "阜杭豆漿", desc: "行列必須の豆乳スープ", lat: 25.0441, lng: 121.5248, type: "food", category: "breakfast", gmaps: "https://maps.app.goo.gl/P8umNDtZmppE66bQ7" },
+                        { name: "国立故宮博物院", desc: "角煮とか白菜とかゆっくりみる", lat: 25.1023, lng: 121.5485, type: "spot", gmaps: "https://maps.app.goo.gl/ChKTJEX387qfoMrNA" },
+                        { name: "中山エリア", desc: "古着屋さんとか", lat: 25.0538, lng: 121.5205, type: "shop", gmaps: "https://maps.app.goo.gl/vnerq8GNciJnYQpPA" },
+                        { name: "Goodbeitao", desc: "トリュフ小籠包!", lat: 25.0520, lng: 121.5220, type: "food", category: "dinner", gmaps: "https://maps.app.goo.gl/h3rwcaypbMzmmmsf9" }
                     ]
                 },
                 4: {
                     date: "4/28(火)",
-                    title: "最後の朝活とお土産",
+                    title: "朝活+お土産",
                     spots: [
-                        { name: "周記肉粥店", desc: "サクサク揚げ豚と肉粥", lat: 25.0370, lng: 121.5015, type: "food", category: "breakfast", gmaps: "https://maps.app.goo.gl/ZhoujiMeatPorridge" },
-                        { name: "李製餅家", desc: "素朴なパイナップルケーキ", lat: 25.0515, lng: 121.5255, type: "shop", gmaps: "https://maps.app.goo.gl/LizhiCakeShop" },
+                        { name: "周記肉粥店", desc: "揚げ豚と肉粥で朝ごはん", lat: 25.0370, lng: 121.5015, type: "food", category: "breakfast", gmaps: "https://maps.app.goo.gl/WMiJiEVMUoEpwwk3A" },
+                        { name: "李製餅家", desc: "お土産: パイナップルケーキ", lat: 25.0515, lng: 121.5255, type: "shop", gmaps: "https://maps.app.goo.gl/wMTu1KhCUWMANSjD6" },
                         { name: "空港へ移動", desc: "台北駅から空港へ", lat: 25.0478, lng: 121.5170, type: "transport", gmaps: "https://maps.app.goo.gl/TaipeiStation" }
                     ]
                 }
