@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台北旅行 2025 旅程管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+        body { font-family: 'Noto Sans JP', sans-serif; }
+        #map { height: 350px; width: 100%; border-radius: 12px; z-index: 10; }
+        .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: bold; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        input[type="checkbox"]:checked + div h3 { text-decoration: line-through; color: #94a3b8; }
+        .modal-overlay { display: none; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
+        .modal-overlay.active { display: flex; }
+        .phrase-card { background: #f8fafc; padding: 10px; border-radius: 8px; border-left: 3px solid #cbd5e1; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-10">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i data-lucide="map-pin" class="text-blue-600 w-5 h-5"></i> Taipei 2025
+            </h1>
+            <div class="flex items-center gap-2">
+                <div id="hotel-info" class="text-[10px] text-right text-slate-400 hidden sm:block mr-2 font-medium"></div>
+                <button onclick="toggleModal('calc-modal')" class="p-2 bg-amber-50 text-amber-600 rounded-full hover:bg-amber-100 transition-colors shadow-sm" title="通貨換算">
+                    <i data-lucide="circle-dollar-sign" class="w-5 h-5"></i>
+                </button>
+                <button onclick="toggleModal('lang-modal')" class="p-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors shadow-sm" title="言語ガイド">
+                    <i data-lucide="languages" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 mt-4 space-y-4">
+        <!-- Flight Summary -->
+        <div class="bg-slate-900 text-white rounded-xl p-4 shadow-lg flex justify-between items-center">
+            <div class="text-left">
+                <p class="text-[10px] uppercase opacity-50 font-bold">4/25 Arrival</p>
+                <p id="arr-time" class="text-sm font-bold"></p>
+            </div>
+            <div class="flex-1 flex justify-center opacity-30"><i data-lucide="move-right"></i></div>
+            <div class="text-right">
+                <p class="text-[10px] uppercase opacity-50 font-bold">4/28 Departure</p>
+                <p id="dep-time" class="text-sm font-bold"></p>
+            </div>
+        </div>
+
+        <div id="map" class="shadow-md"></div>
+        <div id="tab-container" class="flex border-b border-slate-200 overflow-x-auto bg-white rounded-t-xl no-scrollbar"></div>
+        <div id="day-content" class="bg-white rounded-b-xl shadow-md overflow-hidden min-h-[400px]"></div>
+    </main>
+
+    <!-- Currency Modal -->
+    <div id="calc-modal" class="modal-overlay fixed inset-0 z-[100] items-center justify-center p-4" onclick="if(event.target===this)toggleModal('calc-modal')">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+            <div class="p-4 bg-amber-500 text-white flex justify-between items-center">
+                <h2 class="font-bold flex items-center gap-2"><i data-lucide="circle-dollar-sign"></i> 通貨換算</h2>
+                <button onclick="toggleModal('calc-modal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="p-3 bg-amber-50 rounded-lg text-center text-xs text-amber-700 mb-2 font-medium">
+                    レート設定: 1 TWD ≈ <span id="rate-display">4.7</span> JPY
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase">日本円 (JPY)</label>
+                    <div class="relative mt-1">
+                        <span class="absolute left-3 top-2 text-slate-400 text-sm">¥</span>
+                        <input type="number" id="jpy-input" oninput="convertCurrency('jpy')" class="w-full border-2 border-slate-100 rounded-xl py-3 pl-8 pr-4 text-lg font-bold focus:border-amber-400 outline-none transition-all">
+                    </div>
+                </div>
+                <div class="flex justify-center opacity-20"><i data-lucide="repeat"></i></div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase">台湾元 (TWD)</label>
+                    <div class="relative mt-1">
+                        <span class="absolute left-3 top-2 text-slate-400 text-sm">$</span>
+                        <input type="number" id="twd-input" oninput="convertCurrency('twd')" class="w-full border-2 border-slate-100 rounded-xl py-3 pl-8 pr-4 text-lg font-bold focus:border-amber-400 outline-none transition-all">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Language Modal -->
+    <div id="lang-modal" class="modal-overlay fixed inset-0 z-[100] items-center justify-center p-4" onclick="if(event.target===this)toggleModal('lang-modal')">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[80vh]">
+            <div class="p-4 bg-blue-600 text-white flex justify-between items-center shrink-0">
+                <h2 class="font-bold flex items-center gap-2"><i data-lucide="languages"></i> 台湾語ガイド (ピンイン)</h2>
+                <button onclick="toggleModal('lang-modal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
+                <!-- Phrases Section -->
+                <section>
+                    <h3 class="text-xs font-black text-blue-600 uppercase tracking-widest mb-3">基本の挨拶 / Basic</h3>
+                    <div class="space-y-2">
+                        <div class="phrase-card">
+                            <p class="text-xs text-slate-500">ありがとう</p>
+                            <p class="font-bold text-lg">謝謝 <span class="text-blue-500 font-normal text-sm ml-2">Xièxiè</span></p>
+                        </div>
+                        <div class="phrase-card">
+                            <p class="text-xs text-slate-500">すみません（呼びかけ・謝罪）</p>
+                            <p class="font-bold text-lg">不好意思 <span class="text-blue-500 font-normal text-sm ml-2">Bù hǎoyìsi</span></p>
+                        </div>
+                        <div class="phrase-card">
+                            <p class="text-xs text-slate-500">おはよう</p>
+                            <p class="font-bold text-lg">早安 <span class="text-blue-500 font-normal text-sm ml-2">Zǎo ān</span></p>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3 class="text-xs font-black text-blue-600 uppercase tracking-widest mb-3">レストラン・屋台 / Dining</h3>
+                    <div class="space-y-2">
+                        <div class="phrase-card">
+                            <p class="text-xs text-slate-500">店内で食べます</p>
+                            <p class="font-bold text-lg">内用 <span class="text-blue-500 font-normal text-sm ml-2">Nèiyòng</span></p>
+                        </div>
+                        <div class="phrase-card">
+                            <p class="text-xs text-slate-500">持ち帰ります</p>
+                            <p class="font-bold text-lg">外帶 <span class="text-blue-500 font-normal text-sm ml-2">Wàidài</span></p>
+                        </div>
+                        <div class="phrase-card">
+                            <p class="text-xs text-slate-500">お会計お願いします</p>
+                            <p class="font-bold text-lg">買單 <span class="text-blue-500 font-normal text-sm ml-2">Mǎidān</span></p>
+                        </div>
+                        <div class="phrase-card border-l-amber-400">
+                            <p class="text-xs text-slate-500 italic font-bold mb-2">ドリンクのカスタマイズ</p>
+                            <div class="grid grid-cols-2 gap-2 mt-1">
+                                <div class="bg-white p-2 rounded text-[11px]"><span class="block font-bold">去冰 (Qù bīng)</span>氷なし</div>
+                                <div class="bg-white p-2 rounded text-[11px]"><span class="block font-bold">微冰 (Wéi bīng)</span>氷少なめ</div>
+                                <div class="bg-white p-2 rounded text-[11px]"><span class="block font-bold">無糖 (Wú táng)</span>無糖</div>
+                                <div class="bg-white p-2 rounded text-[11px]"><span class="block font-bold">半糖 (Bàn táng)</span>砂糖半分</div>
+                                <div class="bg-white p-2 rounded text-[11px]"><span class="block font-bold">不加香菜 (Bù jiā xiāngcài)</span>パクチー抜き</div>
+                                <div class="bg-white p-2 rounded text-[11px]"><span class="block font-bold">袋子 (Dàizi)</span>レジ袋</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3 class="text-xs font-black text-blue-600 uppercase tracking-widest mb-3">移動・緊急 / Transport & Help</h3>
+                    <div class="space-y-2">
+                        <div class="phrase-card">
+                            <p class="text-xs text-slate-500">ここへ行きたいです</p>
+                            <p class="font-bold text-lg">我想去這裡 <span class="text-blue-500 font-normal text-sm ml-2">Wǒ xiǎng qù zhèlǐ</span></p>
+                        </div>
+                        <div class="phrase-card">
+                            <p class="text-xs text-slate-500">まっすぐ行ってください</p>
+                            <p class="font-bold text-lg">一直走 <span class="text-blue-500 font-normal text-sm ml-2">Yīzhí zǒu</span></p>
+                        </div>
+                        <div class="phrase-card border-l-red-400">
+                            <p class="text-xs text-slate-500 italic font-bold">緊急・トラブル</p>
+                            <div class="space-y-2 mt-1">
+                                <div class="bg-white p-2 rounded text-[12px] flex justify-between">
+                                    <span>トイレはどこ？</span>
+                                    <span class="font-bold">洗手間在哪裡？ (Xǐshǒujiān...)</span>
+                                </div>
+                                <div class="bg-white p-2 rounded text-[12px] flex justify-between">
+                                    <span>助けてください</span>
+                                    <span class="font-bold">救命！ (Jiùmìng!)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <div class="p-4 bg-slate-50 shrink-0 text-center">
+                <button onclick="toggleModal('lang-modal')" class="text-sm font-bold text-slate-500 px-8 py-2">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TRAVEL_CONFIG = {
+            hotel: "Meworld Hotel (西門町)",
+            arrival: "08:00 TPE (桃園)",
+            departure: "15:30 TPE (桃園)",
+            twd_rate: 4.7,
+            itinerary: {
+                1: {
+                    date: "4/25(土)",
+                    title: "定番グルメと雑貨巡り",
+                    spots: [
+                        { name: "桃園国際空港", desc: "空港鉄道で台北駅へ移動", lat: 25.0797, lng: 121.2342, type: "transport", gmaps: "https://maps.app.goo.gl/uPtoLpA7W7u56p6p6" },
+                        { name: "Meworld Hotel", desc: "荷物を預けて西門探索", lat: 25.0440, lng: 121.5085, type: "hotel", gmaps: "https://maps.app.goo.gl/3HhZ2D1XfU1P8Z1S8" },
+                        { name: "阿宗麺線", desc: "とろとろ鰹出汁麺線", lat: 25.0433, lng: 121.5077, type: "food", category: "lunch", gmaps: "https://maps.app.goo.gl/6WdK7G9L7J7J7J7J8" },
+                        { name: "迪化街 (梁山泊一零捌)", desc: "センス抜群の雑貨探し", lat: 25.0560, lng: 121.5100, type: "shop", gmaps: "https://maps.app.goo.gl/Fk9S7D6A5S4D3F2G1" },
+                        { name: "SWEEDOM", desc: "ヌガーのティータイム", lat: 25.0550, lng: 121.5110, type: "food", gmaps: "https://maps.app.goo.gl/T4R3E2W1Q" },
+                        { name: "一甲子餐飲", desc: "絶品角煮刈包", lat: 25.0400, lng: 121.5030, type: "food", category: "dinner", gmaps: "https://maps.app.goo.gl/K9L8M7N6P5" }
+                    ]
+                },
+                2: {
+                    date: "4/26(日)",
+                    title: "ゆったり九份ツアー",
+                    spots: [
+                        { name: "金峰魯肉飯", desc: "台北No.1魯肉飯ランチ", lat: 25.0325, lng: 121.5183, type: "food", category: "lunch", gmaps: "https://maps.app.goo.gl/H8G7F6D5S4" },
+                        { name: "九份ツアー出発", desc: "KKday集合場所へ", lat: 25.0478, lng: 121.5170, type: "transport", gmaps: "https://maps.app.goo.gl/TaipeiMainStation" },
+                        { name: "九份老街", desc: "幻想的な夜の街並み", lat: 25.1099, lng: 121.8450, type: "spot", gmaps: "https://maps.app.goo.gl/JiufenOldStreet" },
+                        { name: "饒河街観光夜市", desc: "ツアー後の夜市散策", lat: 25.0501, lng: 121.5775, type: "food", category: "dinner", gmaps: "https://maps.app.goo.gl/RaoheNightMarket" }
+                    ]
+                },
+                3: {
+                    date: "4/27(月)",
+                    title: "故宮博物館と中山ディナー",
+                    spots: [
+                        { name: "阜杭豆漿", desc: "行列必須の豆乳スープ", lat: 25.0441, lng: 121.5248, type: "food", category: "breakfast", gmaps: "https://maps.app.goo.gl/FuhangDoujiang" },
+                        { name: "国立故宮博物院", desc: "世界の至宝をじっくり鑑賞", lat: 25.1023, lng: 121.5485, type: "spot", gmaps: "https://maps.app.goo.gl/GugongMuseum" },
+                        { name: "中山エリア (赤峰街)", desc: "お洒落な路地裏と古着屋", lat: 25.0538, lng: 121.5205, type: "shop", gmaps: "https://maps.app.goo.gl/ZhongshanArea" },
+                        { name: "Goodbeitao", desc: "お洒落な台湾料理ディナー", lat: 25.0520, lng: 121.5220, type: "food", category: "dinner", gmaps: "https://maps.app.goo.gl/GoodbeitaoShop" }
+                    ]
+                },
+                4: {
+                    date: "4/28(火)",
+                    title: "最後の朝活とお土産",
+                    spots: [
+                        { name: "周記肉粥店", desc: "サクサク揚げ豚と肉粥", lat: 25.0370, lng: 121.5015, type: "food", category: "breakfast", gmaps: "https://maps.app.goo.gl/ZhoujiMeatPorridge" },
+                        { name: "李製餅家", desc: "素朴なパイナップルケーキ", lat: 25.0515, lng: 121.5255, type: "shop", gmaps: "https://maps.app.goo.gl/LizhiCakeShop" },
+                        { name: "空港へ移動", desc: "台北駅から空港へ", lat: 25.0478, lng: 121.5170, type: "transport", gmaps: "https://maps.app.goo.gl/TaipeiStation" }
+                    ]
+                }
+            }
+        };
+
+        let map;
+        let markers = [];
+
+        window.onload = function() {
+            // 要素の存在チェックをしながら値をセット
+            const hotelEl = document.getElementById('hotel-info');
+            if(hotelEl) hotelEl.innerText = TRAVEL_CONFIG.hotel;
+
+            const arrEl = document.getElementById('arr-time');
+            if(arrEl) arrEl.innerText = TRAVEL_CONFIG.arrival;
+
+            const depEl = document.getElementById('dep-time');
+            if(depEl) depEl.innerText = TRAVEL_CONFIG.departure;
+
+            const rateEl = document.getElementById('rate-display');
+            if(rateEl) rateEl.innerText = TRAVEL_CONFIG.twd_rate;
+
+            const tabs = document.getElementById('tab-container');
+            if(tabs) {
+                Object.keys(TRAVEL_CONFIG.itinerary).forEach(day => {
+                    const btn = document.createElement('button');
+                    btn.id = `tab-${day}`;
+                    btn.className = "flex-1 min-w-[80px] py-3 text-center text-xs transition-all text-slate-400 border-b-2 border-transparent";
+                    btn.innerText = `Day ${day}`;
+                    btn.onclick = () => switchDay(day);
+                    tabs.appendChild(btn);
+                });
+            }
+
+            // マップの初期化
+            const mapContainer = document.getElementById('map');
+            if(mapContainer) {
+                map = L.map('map', { zoomControl: false }).setView([25.0440, 121.5170], 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                switchDay(1);
+            }
+            
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        function switchDay(dayNum) {
+            const tabs = document.querySelectorAll('button[id^="tab-"]');
+            tabs.forEach(btn => btn.classList.remove("tab-active", "text-blue-600"));
+            
+            const activeTab = document.getElementById(`tab-${dayNum}`);
+            if(activeTab) activeTab.classList.add("tab-active", "text-blue-600");
+
+            const data = TRAVEL_CONFIG.itinerary[dayNum];
+            if(!data) return;
+
+            let html = `<div class="p-4 bg-slate-50 border-b"><h2 class="font-bold text-slate-800 text-sm flex justify-between"><span>${data.title}</span><span class="text-blue-500 font-normal">${data.date}</span></h2></div><div class="divide-y divide-slate-100">`;
+
+            if(map) {
+                markers.forEach(m => map.removeLayer(m));
+                markers = [];
+                const bounds = L.latLngBounds();
+
+                data.spots.forEach((spot, index) => {
+                    let color = spot.type === 'hotel' ? '#ef4444' : (spot.type === 'food' ? '#f59e0b' : '#3b82f6');
+                    const marker = L.circleMarker([spot.lat, spot.lng], { radius: 9, fillColor: color, color: "#fff", weight: 2, fillOpacity: 0.9 }).addTo(map).bindPopup(`<b>${spot.name}</b>`);
+                    markers.push(marker);
+                    bounds.extend([spot.lat, spot.lng]);
+
+                    let iconHtml = '';
+                    if(spot.category === 'breakfast') iconHtml = '<i data-lucide="coffee" class="w-5 h-5 text-amber-500"></i>';
+                    else if(spot.category === 'lunch') iconHtml = '<i data-lucide="utensils" class="w-5 h-5 text-amber-500"></i>';
+                    else if(spot.category === 'dinner') iconHtml = '<i data-lucide="utensils-crossed" class="w-5 h-5 text-amber-500"></i>';
+                    else iconHtml = `<input type="checkbox" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-0">`;
+
+                    html += `
+                        <label class="p-4 flex items-start gap-4 hover:bg-slate-50 transition-colors group">
+                            <div class="mt-1 shrink-0">${iconHtml}</div>
+                            <div class="flex-1" onclick="focusSpot(${spot.lat}, ${spot.lng}, ${index})">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="font-bold text-slate-800 text-sm">${spot.name}</h3>
+                                    ${spot.gmaps ? `
+                                        <a href="${spot.gmaps}" target="_blank" onclick="event.stopPropagation();" class="p-2 text-slate-300 hover:text-blue-500 transition-colors">
+                                            <i data-lucide="map"></i>
+                                        </a>
+                                    ` : ''}
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-0.5">${spot.desc}</p>
+                            </div>
+                        </label>`;
+                });
+
+                document.getElementById('day-content').innerHTML = html + `</div>`;
+                map.fitBounds(bounds, { padding: [40, 40] });
+                if(typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        }
+
+        function focusSpot(lat, lng, index) {
+            if(map && markers[index]) {
+                map.setView([lat, lng], 16);
+                markers[index].openPopup();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            if(modal) modal.classList.toggle('active');
+        }
+
+        function convertCurrency(type) {
+            const rate = TRAVEL_CONFIG.twd_rate;
+            const jpy = document.getElementById('jpy-input');
+            const twd = document.getElementById('twd-input');
+            if(!jpy || !twd) return;
+            
+            if (type === 'jpy') twd.value = (jpy.value / rate).toFixed(0);
+            else jpy.value = (twd.value * rate).toFixed(0);
+        }
+    </script>
+</body>
+</html>
